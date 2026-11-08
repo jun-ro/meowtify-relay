@@ -1,3 +1,7 @@
+<p align="center">
+  <img src="assets/relay-mascot.png" alt="The Meowtify mascot, a cat in a hoodie sitting next to a server rack" width="240">
+</p>
+
 <h1 align="center">Meowtify Relay</h1>
 
 <p align="center">
@@ -9,7 +13,7 @@
   <a href="https://github.com/jun-ro/meowtify-relay/actions/workflows/ci.yml"><img alt="CI" src="https://github.com/jun-ro/meowtify-relay/actions/workflows/ci.yml/badge.svg"></a>
   <img alt="License: MIT" src="https://img.shields.io/badge/license-MIT-orange">
   <img alt="Rust 2021" src="https://img.shields.io/badge/rust-2021-orange">
-  <img alt="Memory under 64 MB" src="https://img.shields.io/badge/memory-%3C%2064%20MB-brightgreen">
+  <img alt="Memory 64 MB max" src="https://img.shields.io/badge/memory-64_MB_max-brightgreen">
 </p>
 
 ---
