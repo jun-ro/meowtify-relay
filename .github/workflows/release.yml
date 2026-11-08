@@ -1,0 +1,30 @@
+name: Release
+
+on:
+  push:
+    tags: ["v*"]
+
+permissions:
+  contents: write
+
+jobs:
+  linux:
+    # An older Ubuntu, so the binary runs on older distributions too.
+    runs-on: ubuntu-22.04
+    steps:
+      - uses: actions/checkout@v4
+      - uses: dtolnay/rust-toolchain@stable
+      - uses: Swatinem/rust-cache@v2
+      - name: Build
+        run: cargo build --release -p meowtify-jam-relay
+      - name: Package
+        run: |
+          mkdir dist
+          cp target/release/meowtify-jam-relay dist/
+          cp -r deploy dist/deploy
+          cp README.md LICENSE dist/
+          tar -czf meowtify-jam-relay-${GITHUB_REF_NAME}-linux-x86_64.tar.gz -C dist .
+      - name: Publish
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: gh release create "$GITHUB_REF_NAME" --generate-notes ./*.tar.gz

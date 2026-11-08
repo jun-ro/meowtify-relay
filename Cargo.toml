@@ -1,0 +1,16 @@
+[workspace]
+resolver = "2"
+members = ["crates/*"]
+# The Cloudflare Worker builds for wasm32 only, so it has its own workspace.
+exclude = ["cloudflare"]
+
+[workspace.package]
+version = "0.1.0"
+edition = "2021"
+publish = false
+license = "MIT"
+repository = "https://github.com/jun-ro/meowtify-relay"
+
+[profile.release]
+lto = "thin"
+strip = true

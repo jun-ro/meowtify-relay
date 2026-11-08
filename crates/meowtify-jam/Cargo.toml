@@ -1,0 +1,12 @@
+[package]
+name = "meowtify-jam"
+version.workspace = true
+edition.workspace = true
+publish.workspace = true
+license.workspace = true
+repository.workspace = true
+description = "Jam sessions: the wire format and the room logic of the signaling relay. No I/O and no clock, so it builds for native and wasm32."
+
+[dependencies]
+serde = { version = "1", features = ["derive"] }
+serde_json = "1"

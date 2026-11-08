@@ -1,0 +1,19 @@
+[Unit]
+Description=Meowtify jam relay
+After=network-online.target
+Wants=network-online.target
+
+[Service]
+User=meowtify-jam-relay
+# Listens on every interface. Behind a TLS proxy, add 127.0.0.1:8787 as the argument.
+ExecStart=/usr/local/bin/meowtify-jam-relay
+Restart=on-failure
+RestartSec=3
+MemoryMax=64M
+NoNewPrivileges=true
+ProtectSystem=strict
+ProtectHome=true
+PrivateTmp=true
+
+[Install]
+WantedBy=multi-user.target

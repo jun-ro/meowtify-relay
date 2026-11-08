@@ -1,0 +1,23 @@
+[package]
+name = "meowtify-jam-relay"
+version.workspace = true
+edition.workspace = true
+publish.workspace = true
+license.workspace = true
+repository.workspace = true
+description = "Self-hosted signaling relay for jam sessions. The Cloudflare Worker in cloudflare does the same job."
+
+[dependencies]
+base64 = "0.23.1"
+futures-util = "0.3.34"
+getrandom = "0.4.3"
+hmac = "0.13.0"
+meowtify-jam = { path = "../meowtify-jam" }
+sha1 = "0.11.0"
+tokio = { version = "1.54.1", default-features = false, features = ["rt-multi-thread", "net", "time", "sync", "macros", "io-util"] }
+tokio-tungstenite = "0.30.0"
+turn = "0.17.3"
+webrtc-util = "0.17.3"
+
+[dev-dependencies]
+serde_json = "1.0.154"

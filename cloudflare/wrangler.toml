@@ -1,0 +1,21 @@
+name = "meowtify-jam"
+main = "build/worker/shim.mjs"
+compatibility_date = "2025-06-01"
+
+[build]
+command = "cargo install -q worker-build && worker-build --release"
+
+# One Durable Object per room. SQLite-backed objects are the kind the free plan offers.
+[[durable_objects.bindings]]
+name = "JAM_ROOM"
+class_name = "JamRoom"
+
+[[migrations]]
+tag = "v1"
+new_sqlite_classes = ["JamRoom"]
+
+# Optional, for TURN (a relay for peers that cannot connect directly). Create a TURN key in the
+# Cloudflare dashboard (Realtime > TURN), then:
+#   npx wrangler secret put TURN_KEY_ID
+#   npx wrangler secret put TURN_API_TOKEN
+# Without them, /turn answers with STUN only.

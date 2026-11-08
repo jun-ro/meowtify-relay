@@ -1,0 +1,8 @@
+target/
+/cloudflare/target/
+/cloudflare/build/
+/cloudflare/node_modules/
+/cloudflare/.wrangler/
+.env
+.env.*
+*.log
