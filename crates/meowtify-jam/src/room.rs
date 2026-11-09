@@ -269,7 +269,20 @@ impl Room {
             None if self.host_key.is_empty() => return fail(out, conn, ErrorCode::NoRoom, "no jam with this code", true),
             None => {
                 let back = resume.and_then(|r| self.members.iter().position(|m| !m.host && m.id == r.id && same(&m.token, &r.token)));
-                match back {
+                // A guest whose connection died before it learned its token comes back with no
+                // token. Its old place is still there, offline: take it over by name instead of
+                // adding a second copy of the same person.
+                let by_name = if back.is_some() {
+                    None
+                } else {
+                    let want = name.trim().to_lowercase();
+                    (!want.is_empty()).then(|| self.members.iter().position(|m| !m.host && m.conn.is_none() && m.name.to_lowercase() == want)).flatten()
+                };
+                if let Some(i) = by_name {
+                    self.members[i].token = token(env); // the old token is no longer good
+                    self.members[i].hue = hue;
+                }
+                match back.or(by_name) {
                     Some(i) => i,
                     None => {
                         if self.members.iter().filter(|m| !m.host).count() >= self.cfg.max_guests as usize {
@@ -488,6 +501,21 @@ mod tests {
         let out = room.tick(&mut e);
         assert!(matches!(&msgs(&out, 1)[0], ServerMsg::Left { id: 1, reason: LeftReason::Gone }));
         assert_eq!(room.members().len(), 1);
+    }
+
+    #[test]
+    fn a_guest_without_its_token_takes_back_its_own_offline_place() {
+        let (mut room, mut e, old) = jam();
+        room.disconnect(&mut e, 2);
+        // The first connection died before the welcome arrived, so there is no token to send.
+        let out = room.frame(&mut e, 6, &hello("ann", None));
+        assert!(matches!(&msgs(&out, 6)[0], ServerMsg::Welcome { you: 1, .. }), "the same place, not a copy");
+        assert_eq!(room.members().len(), 2);
+        let ServerMsg::Welcome { token, .. } = &msgs(&out, 6)[0] else { panic!() };
+        assert_ne!(*token, old, "a new token, so the old one cannot be used");
+        // Someone who is online under that name is not taken over.
+        let out = room.frame(&mut e, 8, &hello("Ann", None));
+        assert!(matches!(&msgs(&out, 8)[0], ServerMsg::Welcome { you: 2, .. }));
     }
 
     #[test]
