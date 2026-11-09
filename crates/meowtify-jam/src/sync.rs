@@ -67,7 +67,7 @@ mod tests {
 
     fn state(playing: bool, pos_ms: u32, at_ms: u64, duration_ms: u32) -> HostState {
         HostState {
-            song: Some(SongRef { id: 1, title: "t".into(), artist: "a".into(), duration_ms, key: None }),
+            song: Some(SongRef { id: 1, title: "t".into(), artist: "a".into(), duration_ms, key: None, by: None }),
             playing,
             pos_ms,
             at_ms,

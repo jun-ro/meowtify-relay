@@ -144,7 +144,7 @@ mod tests {
     use crate::proto::SongRef;
 
     fn song(id: SongId) -> SongRef {
-        SongRef { id, title: format!("song {id}"), artist: "a".into(), duration_ms: 200_000, key: None }
+        SongRef { id, title: format!("song {id}"), artist: "a".into(), duration_ms: 200_000, key: None, by: None }
     }
 
     fn state(rev: u64, current: Option<SongId>, playing: bool, pos_ms: u32, at_ms: u64, queue: &[SongId]) -> HostState {

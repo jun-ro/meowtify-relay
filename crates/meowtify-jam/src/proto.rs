@@ -20,6 +20,61 @@ pub struct SongRef {
     /// that has the same song play its own copy. The host's path is never sent.
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub key: Option<String>,
+    /// Who put the song in the queue, for songs people queued: a member's number, or
+    /// [`BY_HOST`]. Songs that autoplay picked have none.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub by: Option<u32>,
+}
+
+/// `SongRef::by` for a song the host queued.
+pub const BY_HOST: u32 = u32::MAX;
+
+/// The most characters of lyrics that go to guests. More is cut, so a message stays small.
+pub const MAX_LYRICS_CHARS: usize = 24_000;
+
+/// The words of a song, as the host found them, so guests do not have to look them up again.
+#[derive(Debug, Clone, PartialEq, Eq, Default, Serialize, Deserialize)]
+pub struct SharedLyrics {
+    /// Lines with the time each one starts in milliseconds, in time order.
+    #[serde(default, skip_serializing_if = "Vec::is_empty")]
+    pub synced: Vec<(u32, String)>,
+    /// Lines without times. Used when `synced` is empty.
+    #[serde(default, skip_serializing_if = "Vec::is_empty")]
+    pub plain: Vec<String>,
+    /// The song has no words.
+    #[serde(default, skip_serializing_if = "std::ops::Not::not")]
+    pub instrumental: bool,
+}
+
+impl SharedLyrics {
+    /// The same lyrics cut to [`MAX_LYRICS_CHARS`] characters.
+    pub fn capped(mut self) -> SharedLyrics {
+        let mut left = MAX_LYRICS_CHARS;
+        let mut keep = |text: &str| {
+            let n = text.chars().count() + 1;
+            if n > left {
+                false
+            } else {
+                left -= n;
+                true
+            }
+        };
+        let mut synced = Vec::with_capacity(self.synced.len());
+        for (at, text) in self.synced.drain(..) {
+            if !keep(&text) {
+                break;
+            }
+            synced.push((at, text));
+        }
+        let mut plain = Vec::with_capacity(self.plain.len());
+        for text in self.plain.drain(..) {
+            if !keep(&text) {
+                break;
+            }
+            plain.push(text);
+        }
+        SharedLyrics { synced, plain, instrumental: self.instrumental }
+    }
 }
 
 /// What the host plays, as of the moment `at_ms` on the host's clock.
@@ -97,6 +152,8 @@ pub enum ToGuest {
     NoSong { song: SongId },
     /// A request was refused.
     Denied { what: String },
+    /// The words of a song of the session.
+    Lyrics { song: SongId, lyrics: SharedLyrics },
 }
 
 /// Guest to host, on the control channel.
@@ -142,6 +199,18 @@ pub fn parse_audio_frame(frame: &[u8]) -> Option<(SongId, u64, &[u8])> {
 #[cfg(test)]
 mod tests {
     use super::*;
+
+    #[test]
+    fn lyrics_are_cut_to_a_size_that_fits_one_message() {
+        let long = "la ".repeat(100);
+        let lyrics = SharedLyrics { synced: (0..1_000).map(|i| (i * 1_000, long.clone())).collect(), ..Default::default() };
+        let cut = lyrics.capped();
+        assert!(!cut.synced.is_empty() && cut.synced.len() < 1_000);
+        let json = serde_json::to_string(&ToGuest::Lyrics { song: 1, lyrics: cut }).unwrap();
+        assert!(json.len() < 40_000, "{} bytes", json.len());
+        let back: ToGuest = serde_json::from_str(&json).unwrap();
+        assert!(matches!(back, ToGuest::Lyrics { song: 1, .. }));
+    }
 
     #[test]
     fn audio_frames_round_trip() {
